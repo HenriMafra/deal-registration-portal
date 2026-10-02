@@ -1,77 +1,67 @@
-# 💼 Deal Registration Portal — Sistema Multi-Etapas de Registro de Oportunidades (RO)
+# Deal Registration Portal: Dynamic Schema Validation and Multi-API Concurrent Failover Engine
 
-Plataforma corporativa de **Registro de Oportunidades (Deal Registration / RO)** e qualificação técnica para canais, revendas e integradores de tecnologia, projetada para intermediar a proteção de margem comercial junto a grandes fabricantes de TI (como Qualys, Fortinet, Netskope, HPE/Aruba e Zscaler).
-
-Construída com **Next.js 14 (App Router)**, **Supabase** e um motor resiliente de **consulta cadastral de órgãos públicos por CNPJ com failover em 5 APIs em paralelo**.
-
----
-
-## 📌 Que Problema Resolve?
-
-No mercado B2B/B2G de tecnologia corporativa, as revendas que desenvolvem o projeto técnico junto ao cliente têm o direito de "registrar a oportunidade" no fabricante para obter desconto e proteção de margem. 
-
-No entanto, o processo tradicional é manual, lento e burocrático:
-- Formulários estáticos em PDF ou planilhas que não validam regras de concorrência ou valores mínimos.
-- Necessidade de preencher campos técnicos completamente diferentes para cada fabricante (um formulário de Firewall exige throughput e portas; um de EDR exige quantidade de agentes e retenção).
-- Erros de digitação de CNPJ e dados de órgãos públicos que travam aprovações por dias.
-
-O **Deal Registration Portal** resolve isso digitalizando o ciclo completo em 3 etapas com validação dinâmica em tempo real.
+**Author:** Henri Mafra  
+**License:** MIT License  
+**Domain:** Enterprise Application Integration, State Machine Workflows, Resilient Distributed Systems  
 
 ---
 
-## ⚙️ Diferencial Técnico & Arquitetura
+## 1. Overview
 
-### 1. Failover Paralelo de 5 APIs de Consulta CNPJ
-Ao digitar o CNPJ do órgão comprador ou empresa cliente, o sistema dispara requisições assíncronas simultâneas (`Promise.any`) com fallback automático:
-- BrasilAPI (Receita Federal)
-- Minha Receita
-- CNPJ.ws
-- ReceitaWS
-- Base local de cache PostgreSQL
-
-Garante tempo de resposta inferior a **400ms** mesmo quando servidores governamentais estão instáveis.
-
-### 2. Schemas Condicionais Dinâmicos por Fabricante
-A interface renderiza campos e regras específicas conforme o fabricante selecionado:
-- **Qualys:** Tipo de Nuvem (Shared/PCP), Quantidade de Licenças VMDR, Módulo Patch Management.
-- **Fortinet:** Modelo NGFW FortiGate, Subscrição FortiGuard Bundle, FortiAnalyzer GB/dia, Switches PoE.
-- **Netskope:** URL do Tenant, Assinantes CASB Inline, Nós ZTNA Private Access, Perfil DLP.
-
-### 3. Máquina de Estado de Aprovação & CRM Webhook
-- Validação de faixa de valor estimado (USD / BRL).
-- Verificação de duplicidade de registro para o mesmo órgão/edital.
-- Disparo de webhooks padronizados para CRMs comerciais (Bitrix24, HubSpot ou Salesforce).
+Deal Registration Portal is a multi-step enterprise qualification and deal registration platform designed for value-added resellers, system integrators, and OEM technology manufacturers (e.g., Qualys, Fortinet, Netskope, HPE/Aruba). The platform features dynamic conditional form schemas and a **concurrent 5-way API failover subsystem** for corporate registry verification.
 
 ---
 
-## 🏗️ Stack Tecnológica
+## 2. Concurrent Multi-API Failover Model
 
-- **Frontend & Fullstack:** Next.js 14, React, TypeScript, Tailwind CSS, Lucide Icons.
-- **Backend & Database:** Supabase (PostgreSQL com RLS para isolamento de canais).
-- **Validação de Schemas:** Zod e React Hook Form.
+To ensure sub-500ms corporate entity resolution during public buyer registry lookup, the system initiates simultaneous asynchronous queries across multiple upstream providers:
+
+$$R = \text{Promise.any}\left([A_1(q), A_2(q), A_3(q), A_4(q), A_5(q)]\right)$$
+
+Upstream providers include BrasilAPI, Minha Receita, CNPJ.ws, ReceitaWS, and an internal PostgreSQL cache tier. The fastest valid resolution populates the corporate profile, canceling slower requests via `AbortController` signals to prevent connection pool exhaustion.
 
 ---
 
-## 🚀 Como Executar Localmente
+## 3. Dynamic Conditional Schema Architecture
+
+The qualification pipeline executes across a deterministic three-stage state machine:
+
+1. **Stage 1 (Entity & Notice Qualification):** Public agency CNPJ verification, tender process numbering, bidding modality selection, and legal session date validation.
+2. **Stage 2 (OEM Technical Dimensions):** Renders dynamic conditional fieldsets:
+   - **Vulnerability Management (VMDR):** License volumes, agent quantities, patch management modules.
+   - **Network Security (NGFW):** Firewall throughput, appliance models, high-availability configurations.
+   - **Cloud Security (SASE/ZTNA):** Tenant URLs, inline CASB user counts, private access connector nodes.
+3. **Stage 3 (Distribution & Submission):** Commercial margin targets, authorized distributor selection, and compliance attestations.
+
+---
+
+## 4. Setup and Execution
 
 ```bash
-# 1. Clone o repositório
+# 1. Clone repository
 git clone https://github.com/HenriMafra/deal-registration-portal.git
 cd deal-registration-portal
 
-# 2. Instale as dependências
+# 2. Install dependencies
 npm install
 
-# 3. Configure as variáveis de ambiente
+# 3. Configure environment
 cp .env.example .env.local
-# Preencha NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY
+# Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-# 4. Inicie o servidor
+# 4. Start local development server
 npm run dev
 ```
 
 ---
 
-## 📄 Licença
+## 5. References
 
-Distribuído sob a licença **MIT**. Desenvolvido por **Henri Mafra**.
+- Fowler, M. (2002). *Patterns of Enterprise Application Architecture*. Addison-Wesley.
+- Newman, S. (2021). *Building Microservices: Designing Fine-Grained Systems* (2nd ed.). O'Reilly Media.
+
+---
+
+## 6. License
+
+Licensed under the MIT License. Copyright (c) Henri Mafra.
