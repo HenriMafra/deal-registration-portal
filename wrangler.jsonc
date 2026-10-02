@@ -1,0 +1,33 @@
+{
+  // MAPPER — Registro de Oportunidade (RO), Cloudflare (OpenNext).
+  // ATENÇÃO: este é um repositório STANDALONE de referência, extraído do monorepo
+  // atlas-b2g-online para entrega a uma equipe externa. O deploy REAL de produção
+  // continua sendo feito a partir do repo original (Worker "mapper"). Este
+  // wrangler.jsonc usa um nome de Worker DIFERENTE ("mapper-ro-standalone") de
+  // propósito, para nunca ser confundido/sobrescrever o Worker de produção por engano.
+  // Deploy: npm run deploy:cf
+  // SEGREDOS (SUPABASE_SERVICE_ROLE_KEY, DATABASE_URL) NÃO ficam aqui — use `wrangler secret put`.
+  // NEXT_PUBLIC_* são embutidos no build (vêm do .env.local em `next build`).
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "mapper-ro-standalone",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2025-03-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "observability": {
+    "enabled": true
+  },
+  // Smart Placement: diagnosticado 2026-06-30 — todo fetch do Worker para o Supabase em
+  // sa-east-1 (atlas-b2g-medflow) travava ~20s e voltava erro 522 (roteamento Cloudflare↔AWS
+  // sa-east-1 degradado), enquanto chamadas para um Supabase em us-east-2 e para APIs externas
+  // funcionavam normalmente. Smart Placement deixa a Cloudflare escolher onde rodar o Worker
+  // com base em onde estão os backends que ele chama, o que pode contornar o roteamento ruim.
+  "placement": { "mode": "smart" },
+  "vars": {
+    // não-secretos apenas
+    "ATLAS_DEFAULT_TAG": "PRODUCAO"
+  }
+}
